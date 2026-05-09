@@ -247,7 +247,6 @@ struct flash_node_data {
 	u8				strobe_ctrl;
 	u8				strobe_sel;
 	int				custom_brightness;
-	bool custom_brightness_userspace_set;
 	enum flash_led_type		type;
 	bool				led_on;
 };
@@ -1257,12 +1256,10 @@ static void qpnp_flash_led_node_set(struct flash_node_data *fnode, int value)
 	fnode->ires_ua = fnode->default_ires_ua;
 
 	if (fnode->type == FLASH_LED_TYPE_TORCH) {
-		if (fnode->custom_brightness_userspace_set) {
-			if (value > 0) {
-				prgm_current_ma = fnode->custom_brightness;
-			} else {
-				prgm_current_ma = 0;
-			}
+		if (value > 0) {
+			prgm_current_ma = fnode->custom_brightness;
+		} else {
+			prgm_current_ma = 0;
 		}
 	}
 
@@ -1880,7 +1877,6 @@ static ssize_t custom_brightness_store(struct device *dev,
 
 	spin_lock(&led->lock);
 	fnode->custom_brightness = value;
-	fnode->custom_brightness_userspace_set = true;
 	spin_unlock(&led->lock);
 
 	return size;
