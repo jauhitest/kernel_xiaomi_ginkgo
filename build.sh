@@ -8,6 +8,7 @@ TC_DIR="$(pwd)/../tc/"
 CLANG_DIR="${TC_DIR}clang"
 GCC_64_DIR="${TC_DIR}aarch64-linux-android-4.9"
 GCC_32_DIR="${TC_DIR}arm-linux-androideabi-4.9"
+DEFCONFIG="vendor/ginkgo_defconfig"
 export TZ=Asia/Jakarta
 export PATH="$CLANG_DIR/bin:$PATH"
 
