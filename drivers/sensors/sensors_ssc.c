@@ -27,6 +27,8 @@
 #include <linux/delay.h>
 #include <linux/sysfs.h>
 #include <linux/workqueue.h>
+#include <linux/ktime.h>
+#include <linux/pm_wakeup.h>
 
 #include <soc/qcom/subsystem_restart.h>
 
@@ -78,6 +80,7 @@ static struct attribute *attrs[] = {
 
 static struct platform_device *slpi_private;
 static struct work_struct slpi_ldr_work;
+static struct wakeup_source *slpi_wakelock;
 
 static void slpi_load_fw(struct work_struct *slpi_ldr_work)
 {
@@ -115,6 +118,7 @@ static void slpi_load_fw(struct work_struct *slpi_ldr_work)
 	if (IS_ERR(priv->pil_h)) {
 		dev_err(&pdev->dev, "%s: pil get failed,\n",
 			__func__);
+		__pm_relax(slpi_wakelock);
 		goto fail;
 	}
 
@@ -128,6 +132,7 @@ fail:
 static void slpi_loader_do(struct platform_device *pdev)
 {
 	dev_dbg(&pdev->dev, "%s: scheduling work to load SLPI fw\n", __func__);
+	__pm_stay_awake(slpi_wakelock);
 	schedule_work(&slpi_ldr_work);
 }
 
@@ -144,6 +149,7 @@ static void slpi_loader_unload(struct platform_device *pdev)
 		dev_dbg(&pdev->dev, "%s: calling subsystem put\n", __func__);
 		subsystem_put(priv->pil_h);
 		priv->pil_h = NULL;
+		__pm_relax(slpi_wakelock);
 	}
 }
 
@@ -294,17 +300,13 @@ static u32 sns_read_qtimer(void)
 {
 	u64 val;
 
-	val = arch_counter_get_cntvct();
+	val = ktime_get_boottime_ns();
 	/*
-	 * To convert ticks from 19.2 Mhz clock to 32768 Hz clock:
-	 * x = (value * 32768) / 19200000
-	 * This is same as first left shift the value by 4 bits, i.e. multiply
-	 * by 16, and then divide by 0x249F. The latter is preferable since
-	 * QTimer tick (value) is 56-bit, so (value * 32768) could overflow,
-	 * while (value * 16) will never do
+	 * Convert nanoseconds to 32768 Hz clock ticks:
+	 * ticks = (ns * 32768) / 1,000,000,000
+	 * This is approximately ns / 30517.578
 	 */
-	val <<= 4;
-	do_div(val, QTICK_DIV_FACTOR);
+	val = div_u64(val << 15, 1000000000);
 
 	return (u32)val;
 }
@@ -361,6 +363,8 @@ static int sensors_ssc_probe(struct platform_device *pdev)
 		return ret;
 	}
 
+	slpi_wakelock = wakeup_source_register("slpi_wakelock");
+
 	sns_ctl.dev_class = class_create(THIS_MODULE, CLASS_NAME);
 	if (sns_ctl.dev_class == NULL) {
 		pr_err("%s: class_create fail.\n", __func__);
@@ -414,6 +418,8 @@ res_err:
 static int sensors_ssc_remove(struct platform_device *pdev)
 {
 	slpi_loader_remove(pdev);
+	if (slpi_wakelock)
+		wakeup_source_unregister(slpi_wakelock);
 	cdev_del(sns_ctl.cdev);
 	kfree(sns_ctl.cdev);
 	sns_ctl.cdev = NULL;
