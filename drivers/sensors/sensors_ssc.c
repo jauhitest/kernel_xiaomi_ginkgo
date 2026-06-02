@@ -363,7 +363,7 @@ static int sensors_ssc_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	slpi_wakelock = wakeup_source_register("slpi_wakelock");
+	slpi_wakelock = wakeup_source_register(&pdev->dev, "slpi_wakelock");
 
 	sns_ctl.dev_class = class_create(THIS_MODULE, CLASS_NAME);
 	if (sns_ctl.dev_class == NULL) {
