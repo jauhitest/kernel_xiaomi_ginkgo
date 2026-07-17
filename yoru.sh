@@ -13,8 +13,8 @@ if [ -z "$VARIANT" ]; then
 fi
 
 # ================= PATH =================
-DEFCONFIG="ginkgo_defconfig"
-TEMP_DEFCONFIG="ginkgo_temp_defconfig"
+DEFCONFIG="vendor/ginkgo_defconfig"
+TEMP_DEFCONFIG="vendor/ginkgo_temp_defconfig"
 ROOTDIR=$(pwd)
 OUTDIR="$ROOTDIR/out/arch/arm64/boot"
 ANYKERNEL_DIR="$ROOTDIR/AnyKernel"
