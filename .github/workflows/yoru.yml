@@ -1,4 +1,4 @@
-name: PhroLova Kernel
+name: ginkgo Kernel
 
 on:
   workflow_dispatch:
