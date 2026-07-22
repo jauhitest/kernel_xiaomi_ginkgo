@@ -69,8 +69,8 @@ jobs:
         env:
           KBUILD_BUILD_USER: "cappuccino"
           KBUILD_BUILD_HOST: "build"
-          TG_BOT_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TG_CHAT_ID: ${{ secrets. TELEGRAM_CHAT_ID }}
+          TG_BOT_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets. TG_CHAT_ID }}
           PIXELDRAIN_API_KEY: ${{ secrets.PIXELDRAIN_API_KEY }}
           TELE_API_ID: ${{ secrets.TELE_API_ID }}
           TELE_API_HASH: ${{ secrets.TELE_API_HASH }}
